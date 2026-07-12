@@ -1,0 +1,27 @@
+Maven dependency summary for /home/miguez/Projects/flash-sale-poc
+
+Project POM evidence:
+- The project manifest in pom.xml declares direct dependencies on spring-boot-starter-web, spring-boot-starter-validation, spring-boot-starter-data-jpa, spring-boot-starter-data-redis, spring-boot-starter-amqp, postgresql, lombok, and spring-boot-starter-test.
+- The Spring Boot parent is version 3.3.5.
+
+Direct dependency coordinates resolved from the local Maven repository:
+- com.example:flash-sale-poc:0.0.1-SNAPSHOT
+- org.springframework.boot:spring-boot-starter-web:3.3.5
+- org.springframework.boot:spring-boot-starter-validation:3.3.5
+- org.springframework.boot:spring-boot-starter-data-jpa:3.3.5
+- org.springframework.boot:spring-boot-starter-data-redis:3.3.5
+- org.springframework.boot:spring-boot-starter-amqp:3.3.5
+- org.postgresql:postgresql:42.7.4 (runtime)
+- org.projectlombok:lombok:optional
+- org.springframework.boot:spring-boot-starter-test:3.3.5 (test)
+
+Relevant transitive dependencies verified from downloaded Maven POM metadata:
+- spring-boot-starter-web:3.3.5 brings spring-boot-starter:3.3.5, spring-boot-starter-json:3.3.5, spring-boot-starter-tomcat:3.3.5, org.springframework:spring-web:6.1.14, org.springframework:spring-webmvc:6.1.14.
+- spring-boot-starter-validation:3.3.5 brings org.apache.tomcat.embed:tomcat-embed-el:10.1.31 and org.hibernate.validator:hibernate-validator:8.0.1.Final.
+- spring-boot-starter-data-jpa:3.3.5 brings org.springframework.boot:spring-boot-starter-aop:3.3.5, org.springframework.boot:spring-boot-starter-jdbc:3.3.5, org.hibernate.orm:hibernate-core:6.5.3.Final, org.springframework.data:spring-data-jpa:3.3.5, and org.springframework:spring-aspects:6.1.14.
+- spring-boot-starter-data-redis:3.3.5 brings io.lettuce:lettuce-core:6.3.2.RELEASE and org.springframework.data:spring-data-redis:3.3.5.
+- spring-boot-starter-amqp:3.3.5 brings org.springframework:spring-messaging:6.1.14 and org.springframework.amqp:spring-rabbit:3.1.7.
+- postgresql:42.7.4 brings org.checkerframework:checker-qual:3.42.0 at runtime, plus optional test-related artifacts such as junit:junit:4.13.2 and org.junit.jupiter:junit-jupiter-api:5.10.2.
+
+Evidence source:
+- The dependency details above were read from the locally resolved POM files under ~/.m2/repository for the corresponding artifacts.
