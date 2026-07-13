@@ -26,6 +26,9 @@ public class OrderListener {
     @Transactional
     public void handle(String message) {
         OrderService.OrderEvent event = OrderService.OrderEvent.fromMessage(message);
+        if (event.forceFail()) {
+            throw new IllegalStateException("Forced failure for order " + event.orderId());
+        }
         OrderEntity order = orderRepository.findById(event.orderId())
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + event.orderId()));
         order.setStatus(OrderStatus.CONFIRMED);

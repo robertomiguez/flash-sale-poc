@@ -93,6 +93,7 @@ When a request comes in:
 6. If a message reaches the DLQ, the DLQ handler restores Redis stock and marks the order `FAILED`.
 
 You can fetch the order by ID with `GET /api/orders/{id}` to show the state after the queue has processed it.
+You can also set `"forceFail": true` on the order request to intentionally send the message through the DLQ path for the demo.
 
 Redis is the fast stock gate. PostgreSQL is the durable order store. RabbitMQ sits in between so request handling stays fast.
 
@@ -158,7 +159,15 @@ Successful reservation:
 ```bash
 curl -i -X POST http://localhost:8080/api/orders \
   -H "Content-Type: application/json" \
-  -d '{"itemId":1,"userId":123}'
+  -d '{"itemId":1,"userId":123,"forceFail":false}'
+```
+
+Forced failure for DLQ demo:
+
+```bash
+curl -i -X POST http://localhost:8080/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"itemId":1,"userId":123,"forceFail":true}'
 ```
 
 Fetch order by ID:

@@ -4,18 +4,26 @@
 # 3. Redis stock for item:stock:1 should go from 10 to 8
 # 4. Order status in Postgres should move from PENDING to CONFIRMED
 # 5. Use the order ID from the response and run the GET request below
+# 6. To demo DLQ, run the request with "forceFail": true and then GET the order again
 
 POST http://localhost:8080/api/orders HTTP/1.1
 content-type: application/json
 
-{"itemId":1,"userId":123}
+{"itemId":1,"userId":123,"forceFail":false}
 
 ###
 
 POST http://localhost:8080/api/orders HTTP/1.1
 content-type: application/json
 
-{"itemId":1,"userId":123}
+{"itemId":1,"userId":123,"forceFail":false}
+
+###
+
+POST http://localhost:8080/api/orders HTTP/1.1
+content-type: application/json
+
+{"itemId":1,"userId":123,"forceFail":true}
 
 ###
 
