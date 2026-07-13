@@ -81,6 +81,7 @@ sequenceDiagram
 The app has one public endpoint:
 
 - `POST /api/orders`
+- `GET /api/orders/{id}`
 
 When a request comes in:
 
@@ -90,6 +91,8 @@ When a request comes in:
 4. The service publishes an order event to RabbitMQ.
 5. The listener consumes the event and marks the order `CONFIRMED`.
 6. If a message reaches the DLQ, the DLQ handler restores Redis stock and marks the order `FAILED`.
+
+You can fetch the order by ID with `GET /api/orders/{id}` to show the state after the queue has processed it.
 
 Redis is the fast stock gate. PostgreSQL is the durable order store. RabbitMQ sits in between so request handling stays fast.
 
@@ -158,6 +161,12 @@ curl -i -X POST http://localhost:8080/api/orders \
   -d '{"itemId":1,"userId":123}'
 ```
 
+Fetch order by ID:
+
+```bash
+curl -i http://localhost:8080/api/orders/{id}
+```
+
 Expected responses:
 
 - `202 Accepted` if stock was reserved
@@ -200,6 +209,7 @@ Defaults:
 
 - [`src/main/java/com/example/flashsale/FlashSalePocApplication.java`](src/main/java/com/example/flashsale/FlashSalePocApplication.java) - app entry point
 - [`src/main/java/com/example/flashsale/controller/OrderController.java`](src/main/java/com/example/flashsale/controller/OrderController.java) - HTTP API
+- [`src/main/java/com/example/flashsale/dto/OrderResponse.java`](src/main/java/com/example/flashsale/dto/OrderResponse.java) - order lookup response
 - [`src/main/java/com/example/flashsale/service/OrderService.java`](src/main/java/com/example/flashsale/service/OrderService.java) - reservation logic
 - [`src/main/java/com/example/flashsale/service/InventoryService.java`](src/main/java/com/example/flashsale/service/InventoryService.java) - shared inventory sync logic
 - [`src/main/java/com/example/flashsale/service/OrderListener.java`](src/main/java/com/example/flashsale/service/OrderListener.java) - RabbitMQ consumer
