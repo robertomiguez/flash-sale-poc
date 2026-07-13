@@ -1,0 +1,6 @@
+# Reset stock to a known value before demoing the order flow
+
+POST http://localhost:8080/api/admin/stock/1/reset HTTP/1.1
+content-type: application/json
+
+{"quantity":10}

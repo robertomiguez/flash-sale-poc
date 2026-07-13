@@ -7,6 +7,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -14,8 +15,8 @@ import java.util.UUID;
 @Service
 public class OrderService {
     private final StringRedisTemplate redisTemplate;
-    private final RabbitTemplate rabbitTemplate;
     private final OrderRepository orderRepository;
+    private final RabbitTemplate rabbitTemplate;
 
     @Value("${app.rabbitmq.exchange}")
     private String exchange;
@@ -23,13 +24,14 @@ public class OrderService {
     @Value("${app.rabbitmq.routing-key}")
     private String routingKey;
 
-    public OrderService(StringRedisTemplate redisTemplate, RabbitTemplate rabbitTemplate,
-            OrderRepository orderRepository) {
+    public OrderService(StringRedisTemplate redisTemplate,
+            OrderRepository orderRepository, RabbitTemplate rabbitTemplate) {
         this.redisTemplate = redisTemplate;
-        this.rabbitTemplate = rabbitTemplate;
         this.orderRepository = orderRepository;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
+    @Transactional
     public boolean reserve(ReserveRequest request) {
         String stockKey = "item:stock:" + request.itemId();
         Long remaining = redisTemplate.opsForValue().decrement(stockKey);
@@ -40,23 +42,14 @@ public class OrderService {
         }
 
         String orderId = UUID.randomUUID().toString();
-        String eventMessage = OrderEvent.toMessage(orderId, request.itemId(), request.userId(), "PENDING");
-        rabbitTemplate.convertAndSend(exchange, routingKey, eventMessage);
+        OrderEvent event = new OrderEvent(orderId, request.itemId(), request.userId(), "PENDING");
+        orderRepository.save(new OrderEntity(orderId, request.itemId(), request.userId(), "PENDING", Instant.now()));
+        rabbitTemplate.convertAndSend(exchange, routingKey, event.toMessage());
         return true;
     }
 
-    public void persistOrder(OrderEvent event) {
-        if (orderRepository.existsById(event.orderId())) {
-            return;
-        }
-
-        OrderEntity entity = new OrderEntity(event.orderId(), event.itemId(), event.userId(), event.status(),
-                Instant.now());
-        orderRepository.save(entity);
-    }
-
     public record OrderEvent(String orderId, Long itemId, Long userId, String status) {
-        public static String toMessage(String orderId, Long itemId, Long userId, String status) {
+        public String toMessage() {
             return String.join("|", orderId, String.valueOf(itemId), String.valueOf(userId), status);
         }
 

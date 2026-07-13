@@ -38,6 +38,10 @@ public class InventoryService {
         return inventory;
     }
 
+    public void restoreStock(Long itemId) {
+        redisTemplate.opsForValue().increment(stockKey(itemId));
+    }
+
     private String stockKey(Long itemId) {
         return "item:stock:" + itemId;
     }

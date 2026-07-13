@@ -19,10 +19,15 @@ flowchart LR
     U[Client / curl / frontend] -->|POST /api/orders| C[OrderController]
     C --> S[OrderService]
     S -->|DECR stock| R[(Redis)]
+    S -->|save PENDING order| P[(PostgreSQL)]
     S -->|publish OrderEvent| X[(RabbitMQ Exchange V2)]
     X --> Q[(RabbitMQ Queue V2)]
     Q --> L[OrderListener]
-    L -->|save order| P[(PostgreSQL)]
+    L -->|update CONFIRMED| P
+    Q -. dead letter .-> D[(DLQ)]
+    D --> LD[DLQ handler]
+    LD -->|restore stock + mark FAILED| R
+    LD -->|update order| P
     A[AdminStockController] -->|update stock| R
     A -->|reset stock| R
     A -->|update inventory| I[(Inventory table)]
@@ -60,11 +65,11 @@ sequenceDiagram
     Controller->>Service: reserve(request)
     Service->>Redis: DECR item:stock:{itemId}
     alt stock available
+        Service->>DB: insert OrderEntity(PENDING)
         Service->>RabbitMQ: publish OrderEvent
         Controller-->>Client: 202 Accepted
         RabbitMQ-->>Listener: deliver OrderEvent
-        Listener->>Service: persistOrder(event)
-        Service->>DB: insert OrderEntity
+        Listener->>DB: update OrderEntity(CONFIRMED)
     else stock exhausted
         Service->>Redis: INCR item:stock:{itemId}
         Controller-->>Client: 409 Conflict
@@ -81,9 +86,10 @@ When a request comes in:
 
 1. The controller receives the request.
 2. The service decrements stock in Redis.
-3. If stock is available, the service publishes an order event to RabbitMQ.
-4. The listener consumes the event.
-5. The listener saves the order into PostgreSQL.
+3. If stock is available, the service saves a `PENDING` order in PostgreSQL.
+4. The service publishes an order event to RabbitMQ.
+5. The listener consumes the event and marks the order `CONFIRMED`.
+6. If a message reaches the DLQ, the DLQ handler restores Redis stock and marks the order `FAILED`.
 
 Redis is the fast stock gate. PostgreSQL is the durable order store. RabbitMQ sits in between so request handling stays fast.
 
@@ -221,13 +227,12 @@ The important idea is:
 
 - check stock fast
 - accept or reject the request quickly
-- save the order later through the queue
+- save the order immediately as `PENDING`
+- confirm it later through the queue
 - keep Redis in sync with the durable inventory data
 
 ## Troubleshooting
 
-- If `docker compose up -d` fails with a Docker credential helper error, remove `"credsStore": "desktop"` from `~/.docker/config.json`.
 - If Maven complains about `JAVA_HOME`, point it to your Java 25 JDK.
-- If `mvn spring-boot:run` fails on the old system Maven, use the local Maven at `/home/miguez/.local/maven/bin/mvn`.
 - If you get `409 Conflict`, it usually means Redis stock is exhausted or the inventory value needs to be updated.
-- If RabbitMQ starts looping on a bad message, the listener now retries and then sends it to the dead-letter queue.
+- If RabbitMQ or the listener fails, the message can land in the dead-letter queue and the stock is restored there.

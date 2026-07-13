@@ -1,3 +1,16 @@
+# Demo order flow
+# 1. Reset stock first using reset.rest
+# 2. Run this request twice
+# 3. Redis stock for item:stock:1 should go from 10 to 8
+# 4. Order status in Postgres should move from PENDING to CONFIRMED
+
+POST http://localhost:8080/api/orders HTTP/1.1
+content-type: application/json
+
+{"itemId":1,"userId":123}
+
+###
+
 POST http://localhost:8080/api/orders HTTP/1.1
 content-type: application/json
 
