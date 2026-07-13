@@ -98,11 +98,43 @@ You can also set `"forceFail": true` on the order request to intentionally send 
 Redis is the fast stock gate. PostgreSQL is the durable order store. RabbitMQ sits in between so request handling stays fast.
 The inventory row in PostgreSQL is the source of truth for available stock; Redis mirrors that value for fast reservation checks.
 
+## Demo Script
+
+1. Reset stock to a known value.
+2. Place two successful orders.
+3. Inspect stock to show Redis and PostgreSQL still agree.
+4. Look up one order to show it moved from `PENDING` to `CONFIRMED`.
+5. Place one forced-failure order.
+6. Look up the failed order and inspect stock again to show DLQ recovery.
+
+### Demo commands
+
+```bash
+curl -X POST http://localhost:8080/api/admin/stock/1/reset \
+  -H "Content-Type: application/json" \
+  -d '{"quantity":10}'
+```
+
+```bash
+curl -i -X POST http://localhost:8080/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"itemId":1,"userId":123,"forceFail":false}'
+```
+
+```bash
+curl -i -X POST http://localhost:8080/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"itemId":1,"userId":123,"forceFail":true}'
+```
+
+```bash
+curl -i http://localhost:8080/api/orders/{id}
+curl -i http://localhost:8080/api/admin/stock/1
+```
+
 On startup, the app seeds Redis with `item:stock:1 = 10` when the key is missing.
 
 If you run with the `dev` profile, the app resets that stock on every startup.
-
-The real inventory is also stored in PostgreSQL, so Redis is synced from the inventory table instead of being the only place that knows the stock value.
 
 The stock write path is shared by the startup seeder and the admin endpoint through `InventoryService`.
 
