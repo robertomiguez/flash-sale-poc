@@ -96,6 +96,7 @@ You can fetch the order by ID with `GET /api/orders/{id}` to show the state afte
 You can also set `"forceFail": true` on the order request to intentionally send the message through the DLQ path for the demo.
 
 Redis is the fast stock gate. PostgreSQL is the durable order store. RabbitMQ sits in between so request handling stays fast.
+The inventory row in PostgreSQL is the source of truth for available stock; Redis mirrors that value for fast reservation checks.
 
 On startup, the app seeds Redis with `item:stock:1 = 10` when the key is missing.
 
@@ -192,6 +193,14 @@ curl -X POST http://localhost:8080/api/admin/stock/1 \
 
 This updates both PostgreSQL inventory and Redis stock.
 
+To inspect stock:
+
+```bash
+curl -i http://localhost:8080/api/admin/stock/1
+```
+
+The response shows both the PostgreSQL inventory value and the current Redis value.
+
 To reset stock for an item during development:
 
 ```bash
@@ -224,6 +233,7 @@ Defaults:
 - [`src/main/java/com/example/flashsale/service/OrderListener.java`](src/main/java/com/example/flashsale/service/OrderListener.java) - RabbitMQ consumer
 - [`src/main/java/com/example/flashsale/model/OrderEntity.java`](src/main/java/com/example/flashsale/model/OrderEntity.java) - PostgreSQL entity
 - [`src/main/java/com/example/flashsale/model/InventoryEntity.java`](src/main/java/com/example/flashsale/model/InventoryEntity.java) - inventory entity
+- [`src/main/java/com/example/flashsale/dto/InventoryStatusResponse.java`](src/main/java/com/example/flashsale/dto/InventoryStatusResponse.java) - stock inspection response
 - [`src/main/java/com/example/flashsale/repository/OrderRepository.java`](src/main/java/com/example/flashsale/repository/OrderRepository.java) - JPA repository
 - [`src/main/java/com/example/flashsale/repository/InventoryRepository.java`](src/main/java/com/example/flashsale/repository/InventoryRepository.java) - inventory repository
 - [`src/main/java/com/example/flashsale/config/StockDataInitializer.java`](src/main/java/com/example/flashsale/config/StockDataInitializer.java) - Redis stock seeder

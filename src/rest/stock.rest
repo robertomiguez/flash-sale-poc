@@ -2,3 +2,7 @@ POST http://localhost:8080/api/admin/stock/1 HTTP/1.1
 content-type: application/json
 
 {"availableQuantity":9}
+
+###
+
+GET http://localhost:8080/api/admin/stock/1 HTTP/1.1
