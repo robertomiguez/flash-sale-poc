@@ -6,6 +6,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 public class InventoryService {
@@ -40,6 +41,15 @@ public class InventoryService {
 
     public void restoreStock(Long itemId) {
         redisTemplate.opsForValue().increment(stockKey(itemId));
+    }
+
+    public Optional<InventoryEntity> findInventory(Long itemId) {
+        return inventoryRepository.findById(itemId);
+    }
+
+    public Long getRedisStock(Long itemId) {
+        String value = redisTemplate.opsForValue().get(stockKey(itemId));
+        return value == null ? null : Long.valueOf(value);
     }
 
     private String stockKey(Long itemId) {
