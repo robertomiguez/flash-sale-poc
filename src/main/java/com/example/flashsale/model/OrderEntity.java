@@ -2,6 +2,8 @@ package com.example.flashsale.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -20,8 +22,9 @@ public class OrderEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
-    private String status;
+    private OrderStatus status;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -29,7 +32,7 @@ public class OrderEntity {
     public OrderEntity() {
     }
 
-    public OrderEntity(String id, Long itemId, Long userId, String status, Instant createdAt) {
+    public OrderEntity(String id, Long itemId, Long userId, OrderStatus status, Instant createdAt) {
         this.id = id;
         this.itemId = itemId;
         this.userId = userId;
@@ -49,11 +52,11 @@ public class OrderEntity {
         return userId;
     }
 
-    public String getStatus() {
+    public OrderStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(OrderStatus status) {
         this.status = status;
     }
 

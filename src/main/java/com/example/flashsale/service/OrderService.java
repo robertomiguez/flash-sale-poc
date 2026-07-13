@@ -2,6 +2,7 @@ package com.example.flashsale.service;
 
 import com.example.flashsale.dto.ReserveRequest;
 import com.example.flashsale.model.OrderEntity;
+import com.example.flashsale.model.OrderStatus;
 import com.example.flashsale.repository.OrderRepository;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,15 +43,16 @@ public class OrderService {
         }
 
         String orderId = UUID.randomUUID().toString();
-        OrderEvent event = new OrderEvent(orderId, request.itemId(), request.userId(), "PENDING");
-        orderRepository.save(new OrderEntity(orderId, request.itemId(), request.userId(), "PENDING", Instant.now()));
+        OrderEvent event = new OrderEvent(orderId, request.itemId(), request.userId(), OrderStatus.PENDING);
+        orderRepository.save(new OrderEntity(orderId, request.itemId(), request.userId(), OrderStatus.PENDING,
+                Instant.now()));
         rabbitTemplate.convertAndSend(exchange, routingKey, event.toMessage());
         return true;
     }
 
-    public record OrderEvent(String orderId, Long itemId, Long userId, String status) {
+    public record OrderEvent(String orderId, Long itemId, Long userId, OrderStatus status) {
         public String toMessage() {
-            return String.join("|", orderId, String.valueOf(itemId), String.valueOf(userId), status);
+            return String.join("|", orderId, String.valueOf(itemId), String.valueOf(userId), status.name());
         }
 
         public static OrderEvent fromMessage(String message) {
@@ -59,7 +61,7 @@ public class OrderService {
                 throw new IllegalArgumentException("Invalid order event message: " + message);
             }
 
-            return new OrderEvent(parts[0], Long.valueOf(parts[1]), Long.valueOf(parts[2]), parts[3]);
+            return new OrderEvent(parts[0], Long.valueOf(parts[1]), Long.valueOf(parts[2]), OrderStatus.valueOf(parts[3]));
         }
     }
 }
