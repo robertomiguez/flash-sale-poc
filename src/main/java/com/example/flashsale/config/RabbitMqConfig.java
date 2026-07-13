@@ -1,6 +1,8 @@
 package com.example.flashsale.config;
 
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,6 +60,14 @@ public class RabbitMqConfig {
             DirectExchange flashSaleDeadLetterExchange) {
         return BindingBuilder.bind(flashSaleDeadLetterQueue).to(flashSaleDeadLetterExchange)
                 .with(deadLetterRoutingKey);
+    }
+
+    @Bean
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory);
+        factory.setDefaultRequeueRejected(false);
+        return factory;
     }
 
 }

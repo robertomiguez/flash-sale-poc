@@ -43,25 +43,28 @@ public class OrderService {
         }
 
         String orderId = UUID.randomUUID().toString();
-        OrderEvent event = new OrderEvent(orderId, request.itemId(), request.userId(), OrderStatus.PENDING);
+        OrderEvent event = new OrderEvent(orderId, request.itemId(), request.userId(), OrderStatus.PENDING,
+                request.forceFail());
         orderRepository.save(new OrderEntity(orderId, request.itemId(), request.userId(), OrderStatus.PENDING,
                 Instant.now()));
         rabbitTemplate.convertAndSend(exchange, routingKey, event.toMessage());
         return true;
     }
 
-    public record OrderEvent(String orderId, Long itemId, Long userId, OrderStatus status) {
+    public record OrderEvent(String orderId, Long itemId, Long userId, OrderStatus status, boolean forceFail) {
         public String toMessage() {
-            return String.join("|", orderId, String.valueOf(itemId), String.valueOf(userId), status.name());
+            return String.join("|", orderId, String.valueOf(itemId), String.valueOf(userId), status.name(),
+                    String.valueOf(forceFail));
         }
 
         public static OrderEvent fromMessage(String message) {
-            String[] parts = message.split("\\|", 4);
-            if (parts.length != 4) {
+            String[] parts = message.split("\\|", 5);
+            if (parts.length != 5) {
                 throw new IllegalArgumentException("Invalid order event message: " + message);
             }
 
-            return new OrderEvent(parts[0], Long.valueOf(parts[1]), Long.valueOf(parts[2]), OrderStatus.valueOf(parts[3]));
+            return new OrderEvent(parts[0], Long.valueOf(parts[1]), Long.valueOf(parts[2]), OrderStatus.valueOf(parts[3]),
+                    Boolean.parseBoolean(parts[4]));
         }
     }
 }
