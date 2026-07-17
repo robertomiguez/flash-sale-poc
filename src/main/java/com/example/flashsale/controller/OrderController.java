@@ -2,7 +2,6 @@ package com.example.flashsale.controller;
 
 import com.example.flashsale.dto.ReserveRequest;
 import com.example.flashsale.dto.OrderResponse;
-import com.example.flashsale.model.OrderEntity;
 import com.example.flashsale.repository.OrderRepository;
 import com.example.flashsale.service.OrderService;
 import jakarta.validation.Valid;

@@ -3,7 +3,6 @@ package com.example.flashsale.controller;
 import com.example.flashsale.dto.StockUpdateRequest;
 import com.example.flashsale.dto.StockResetRequest;
 import com.example.flashsale.dto.InventoryStatusResponse;
-import com.example.flashsale.model.InventoryEntity;
 import com.example.flashsale.service.InventoryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
